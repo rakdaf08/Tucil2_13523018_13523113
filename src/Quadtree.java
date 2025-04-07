@@ -60,6 +60,10 @@ public class Quadtree {
         return em.maxPixelDifference(image, area);
       case ENTROPY:
         return em.entropy(image, area);
+      case SSIM:
+        double error = 1 - em.ssim(image,area);
+        //System.out.println("Error = " + error);
+        return error;
       default:
         throw new IllegalArgumentException("Metode tidak ada!");
     }
@@ -98,6 +102,29 @@ public class Quadtree {
       for (Node child : node.getChildren()) {
         fillImage(graphics, child);
       }
+    }
+  }
+
+  public BufferedImage reconstructImageAtLevel(Node root, int targetLevel, int width, int height) {
+    BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    Graphics2D g = newImage.createGraphics();
+    fillImageAtLevel(g, root, 1, targetLevel);
+    g.dispose();
+    return newImage;
+  }
+
+  private void fillImageAtLevel(Graphics2D g, Node node, int currentLevel, int targetLevel) {
+    if (node == null) return;
+
+    // Jika node adalah leaf atau sudah mencapai target level, gambar blok dengan warna rata-rata node.
+    if (node.isLeaf() || currentLevel == targetLevel) {
+        g.setColor(node.getColor());
+        Rectangle r = node.getArea();
+        g.fillRect(r.x, r.y, r.width, r.height);
+    } else { // Jika belum mencapai target level, lanjutkan ke anak-anaknya.
+        for (Node child : node.getChildren()) {
+            fillImageAtLevel(g, child, currentLevel + 1, targetLevel);
+        }
     }
   }
 }
