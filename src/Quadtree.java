@@ -39,12 +39,14 @@ public class Quadtree {
   }
 
   public boolean divide(Node node, BufferedImage image) {
-    if (node.getArea().width <= minBlockSize || node.getArea().height <= minBlockSize) {
+    Rectangle area = node.getArea();
+    int luas = area.width * area.height;
+
+    if (luas < minBlockSize) {
       return false;
     }
 
-    double err = hitungErr(image, node.getArea());
-
+    double err = hitungErr(image, area);
     return err > threshold;
   }
 
@@ -61,8 +63,8 @@ public class Quadtree {
       case ENTROPY:
         return em.entropy(image, area);
       case SSIM:
-        double error = 1 - em.ssim(image,area);
-        //System.out.println("Error = " + error);
+        double error = 1 - em.ssim(image, area);
+        // System.out.println("Error = " + error);
         return error;
       default:
         throw new IllegalArgumentException("Metode tidak ada!");
@@ -114,17 +116,19 @@ public class Quadtree {
   }
 
   private void fillImageAtLevel(Graphics2D g, Node node, int currentLevel, int targetLevel) {
-    if (node == null) return;
+    if (node == null)
+      return;
 
-    // Jika node adalah leaf atau sudah mencapai target level, gambar blok dengan warna rata-rata node.
+    // Jika node adalah leaf atau sudah mencapai target level, gambar blok dengan
+    // warna rata-rata node.
     if (node.isLeaf() || currentLevel == targetLevel) {
-        g.setColor(node.getColor());
-        Rectangle r = node.getArea();
-        g.fillRect(r.x, r.y, r.width, r.height);
+      g.setColor(node.getColor());
+      Rectangle r = node.getArea();
+      g.fillRect(r.x, r.y, r.width, r.height);
     } else { // Jika belum mencapai target level, lanjutkan ke anak-anaknya.
-        for (Node child : node.getChildren()) {
-            fillImageAtLevel(g, child, currentLevel + 1, targetLevel);
-        }
+      for (Node child : node.getChildren()) {
+        fillImageAtLevel(g, child, currentLevel + 1, targetLevel);
+      }
     }
   }
 }
