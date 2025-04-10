@@ -165,12 +165,14 @@ public class ErrorMeasurement {
     return ((entropyRed + entropyGreen + entropyBlue) / 3);
   }
 
+  /* SSIM hanya membandingkan representasi dari area yang dianggap homogen, karena belum punya gambar terkompresinya */
   public double ssim(BufferedImage image, Rectangle area) {
     int jumlahPiksel = area.width * area.height;
     if (jumlahPiksel == 0) {
         return 0;
     }
     
+    // Inisiasi setiap channel RGB
     double sumR = 0, sumG = 0, sumB = 0;
     for (int y = area.y; y < area.y + area.height; y++) {
         for (int x = area.x; x < area.x + area.width; x++) {
@@ -184,10 +186,12 @@ public class ErrorMeasurement {
         }
     }
     
+    // Rata-rata untuk masing-masing channel warna
     double muR = sumR / jumlahPiksel;
     double muG = sumG / jumlahPiksel;
     double muB = sumB / jumlahPiksel;
     
+    // Menghitung variansi (kontras) masing-masing channel
     double varR = 0, varG = 0, varB = 0;
     for (int y = area.y; y < area.y + area.height; y++) {
         for (int x = area.x; x < area.x + area.width; x++) {
@@ -205,85 +209,13 @@ public class ErrorMeasurement {
     varB /= jumlahPiksel;
     
     // Konstanta untuk 8-bit per kanal
-    //double C1 = Math.pow(0.01 * 255, 2); // tidak berperan karena luminansi menyederhana
     double C2 = Math.pow(0.03 * 255, 2);
     
-    // Karena blok referensi (hasil kompresi) adalah blok homogen dengan nilai rata-rata,
-    // maka perhitungan SSIM per kanal hanya didasarkan pada kontras:
+    // Karena blok referensi (hasil kompresi) adalah blok homogen dengan nilai rata-rata perhitungan SSIM per kanal hanya didasarkan pada kontrasnya
     double ssimR = C2 / (varR + C2);
     double ssimG = C2 / (varG + C2);
     double ssimB = C2 / (varB + C2);
     
-    // Rata-rata tertimbang misal: R:0.3, G:0.3, B:0.4
-    double ssimRGB = 0.3 * ssimR + 0.3 * ssimG + 0.4 * ssimB;
-    return ssimRGB;
-  }
-
-  // Metode ssim yang lama (berbasis blok homogen) masih ada, tetapi sekarang kita tambahkan ssimFull.
-  // ssimFull membandingkan blok before dan after kompresi secara lengkap sesuai rumus.
-  public double ssimFull(BufferedImage original, BufferedImage compressed, Rectangle area) {
-    int N = area.width * area.height;
-    if (N == 0) return 0;
-
-    // Konstanta untuk stabilitas (untuk 8-bit per kanal)
-    double L = 255;
-    double K1 = 0.01, K2 = 0.03;
-    double C1 = Math.pow(K1 * L, 2);
-    double C2 = Math.pow(K2 * L, 2);
-
-    // Hitung rata-rata (mu) untuk tiap kanal pada original dan compressed
-    double sumOrR = 0, sumOrG = 0, sumOrB = 0;
-    double sumCpR = 0, sumCpG = 0, sumCpB = 0;
-    for (int y = area.y; y < area.y + area.height; y++) {
-      for (int x = area.x; x < area.x + area.width; x++) {
-        if (x >= original.getWidth() || y >= original.getHeight() ||
-            x >= compressed.getWidth() || y >= compressed.getHeight()) continue;
-        Color orig = new Color(original.getRGB(x, y));
-        Color comp = new Color(compressed.getRGB(x, y));
-        sumOrR += orig.getRed(); sumOrG += orig.getGreen(); sumOrB += orig.getBlue();
-        sumCpR += comp.getRed(); sumCpG += comp.getGreen(); sumCpB += comp.getBlue();
-      }
-    }
-    double muOrR = sumOrR / N, muOrG = sumOrG / N, muOrB = sumOrB / N;
-    double muCpR = sumCpR / N, muCpG = sumCpG / N, muCpB = sumCpB / N;
-
-    // Hitung variansi dan kovarians untuk tiap kanal
-    double varOrR = 0, varOrG = 0, varOrB = 0;
-    double varCpR = 0, varCpG = 0, varCpB = 0;
-    double covR = 0, covG = 0, covB = 0;
-    for (int y = area.y; y < area.y + area.height; y++) {
-      for (int x = area.x; x < area.x + area.width; x++) {
-        if (x >= original.getWidth() || y >= original.getHeight() ||
-            x >= compressed.getWidth() || y >= compressed.getHeight()) continue;
-        Color orig = new Color(original.getRGB(x, y));
-        Color comp = new Color(compressed.getRGB(x, y));
-        double diffOrR = orig.getRed() - muOrR;
-        double diffOrG = orig.getGreen() - muOrG;
-        double diffOrB = orig.getBlue() - muOrB;
-        double diffCpR = comp.getRed() - muCpR;
-        double diffCpG = comp.getGreen() - muCpG;
-        double diffCpB = comp.getBlue() - muCpB;
-        varOrR += diffOrR * diffOrR;
-        varOrG += diffOrG * diffOrG;
-        varOrB += diffOrB * diffOrB;
-        varCpR += diffCpR * diffCpR;
-        varCpG += diffCpG * diffCpG;
-        varCpB += diffCpB * diffCpB;
-        covR += diffOrR * diffCpR;
-        covG += diffOrG * diffCpG;
-        covB += diffOrB * diffCpB;
-      }
-    }
-    varOrR /= N; varOrG /= N; varOrB /= N;
-    varCpR /= N; varCpG /= N; varCpB /= N;
-    covR /= N; covG /= N; covB /= N;
-
-    // Hitung SSIM per kanal menggunakan rumus penuh:
-    double ssimR = ((2 * muOrR * muCpR + C1) * (2 * covR + C2)) / ((muOrR*muOrR + muCpR*muCpR + C1) * (varOrR + varCpR + C2));
-    double ssimG = ((2 * muOrG * muCpG + C1) * (2 * covG + C2)) / ((muOrG*muOrG + muCpG*muCpG + C1) * (varOrG + varCpG + C2));
-    double ssimB = ((2 * muOrB * muCpB + C1) * (2 * covB + C2)) / ((muOrB*muOrB + muCpB*muCpB + C1) * (varOrB + varCpB + C2));
-
-    // Kombinasikan dengan bobot per kanal (misalnya: R:0.3, G:0.3, B:0.4)
     double ssimRGB = 0.3 * ssimR + 0.3 * ssimG + 0.4 * ssimB;
     return ssimRGB;
   }

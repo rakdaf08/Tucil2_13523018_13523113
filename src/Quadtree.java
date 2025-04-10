@@ -118,14 +118,11 @@ public class Quadtree {
   private void fillImageAtLevel(Graphics2D g, Node node, int currentLevel, int targetLevel) {
     if (node == null)
       return;
-
-    // Jika node adalah leaf atau sudah mencapai target level, gambar blok dengan
-    // warna rata-rata node.
     if (node.isLeaf() || currentLevel == targetLevel) {
       g.setColor(node.getColor());
       Rectangle r = node.getArea();
       g.fillRect(r.x, r.y, r.width, r.height);
-    } else { // Jika belum mencapai target level, lanjutkan ke anak-anaknya.
+    } else {
       for (Node child : node.getChildren()) {
         fillImageAtLevel(g, child, currentLevel + 1, targetLevel);
       }
