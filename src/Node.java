@@ -56,29 +56,33 @@ public class Node {
     int red = 0;
     int green = 0;
     int blue = 0;
-    int totalPixel = area.width * area.height;
+    int validPixelCount = 0;
 
     for (int y = area.y; y < area.y + area.height; y++) {
       for (int x = area.x; x < area.x + area.width; x++) {
-        if (x >= image.getWidth() || y >= image.getHeight()) {
+        if (x < 0 || x >= image.getWidth() || y < 0 || y >= image.getHeight()) {
           continue;
         }
-        int rgb = image.getRGB(x, y);
-        Color color = new Color(rgb);
-
+        Color color = new Color(image.getRGB(x, y));
         red += color.getRed();
         green += color.getGreen();
         blue += color.getBlue();
+        validPixelCount++;
       }
     }
 
-    if (totalPixel == 0) {
+    if (validPixelCount == 0) {
       return new Color(0, 0, 0);
     }
 
-    int avgRed = red / totalPixel;
-    int avgGreen = green / totalPixel;
-    int avgBlue = blue / totalPixel;
+    int avgRed = red / validPixelCount;
+    int avgGreen = green / validPixelCount;
+    int avgBlue = blue / validPixelCount;
+
+    // Clamp nilai ke rentang 0-255 untuk jaga-jaga
+    avgRed = Math.min(255, Math.max(0, avgRed));
+    avgGreen = Math.min(255, Math.max(0, avgGreen));
+    avgBlue = Math.min(255, Math.max(0, avgBlue));
 
     return new Color(avgRed, avgGreen, avgBlue);
   }

@@ -138,7 +138,7 @@ public class Main {
     while(metode == null) {
       System.out.println("\nList Metode Perhitungan Error");
       System.out.println("1. Variance (0 - 20000)");
-      System.out.println("2. MAD (0 - 100)");
+      System.out.println("2. MAD (0 - 255)");
       System.out.println("3. MaxPixelDifference (0 - 255)");
       System.out.println("4. Entropy (0.5 - 8)");
       System.out.println("5. SSIM (0 - 1)");
@@ -176,13 +176,13 @@ public class Main {
 
       if (metode == ErrorMeasurement.Metode.VARIANCE && (threshold < 0 || threshold > 20000)) {
         System.out.println("Threshold tidak sesuai range untuk metode Variansi.");
-      } else if (metode == ErrorMeasurement.Metode.MAD && (threshold < 0 || threshold > 100)) {
+      } else if (metode == ErrorMeasurement.Metode.MAD && (threshold < 0 || threshold > 255)) {
         System.out.println("Threshold tidak sesuai range untuk metode MAD.");
       } else if (metode == ErrorMeasurement.Metode.MPD && (threshold < 0 || threshold > 255)) {
         System.out.println("Threshold tidak sesuai range untuk metode MPD.");
       } else if (metode == ErrorMeasurement.Metode.ENTROPY && (threshold < 0.5 || threshold > 8)) {
         System.out.println("Threshold tidak sesuai range untuk metode Entropi.");
-      } else if(metode == ErrorMeasurement.Metode.SSIM && (threshold < 0 || threshold > 0.5)){
+      } else if(metode == ErrorMeasurement.Metode.SSIM && (threshold < 0 || threshold > 1)){
         System.out.println("Threshold tidak sesuai range untuk metode SSIM.");
       } else {
         break;
@@ -193,14 +193,20 @@ public class Main {
 
   // Fungsi untuk mendapatkan ukuran blok minimum
   private static int getMinBlockSize(Scanner scanner) {
-    System.out.print("Masukkan ukuran blok minimum: ");
-    while (!scanner.hasNextInt()) {
-      System.out.println("Maaf! Input tidak valid. Silakan masukkan angka bulat.");
-      scanner.nextLine();
-      System.out.print("Masukkan ukuran blok minimum: ");
-    }
-    int minBlockSize = scanner.nextInt();
-    scanner.nextLine();
+    int minBlockSize = 0;
+    do {
+      System.out.print("Masukkan ukuran blok minimum (> 0): ");
+      while (!scanner.hasNextInt()) {
+        System.out.println("Input tidak valid. Silakan masukkan angka bulat.");
+        scanner.nextLine();
+        System.out.print("Masukkan ukuran blok minimum (> 0): ");
+      }
+      minBlockSize = scanner.nextInt();
+      scanner.nextLine(); // membersihkan newline
+      if (minBlockSize <= 0) {
+        System.out.println("Ukuran blok minimum harus lebih besar dari 0.");
+      }
+    } while (minBlockSize <= 0);
     return minBlockSize;
   }
 
@@ -218,7 +224,7 @@ public class Main {
   private static String getFileExtension(File file) {
     String name = file.getName();
     int dotIndex = name.lastIndexOf('.');
-    return (dotIndex == -1) ? "png" : name.substring(dotIndex + 1);
+    return (dotIndex == -1) ? "" : name.substring(dotIndex + 1).toLowerCase();
   }
 
   // Fungsi untuk menyimpan gambar
@@ -282,16 +288,29 @@ public class Main {
   /* Fungsi untuk mendapatkan output path dan validasi */
   private static String getOutputFilePath(Scanner scanner) {
     String filePath;
+    String[] validExtensions = {"jpg", "jpeg", "png"};
     while (true) {
       System.out.print("\nMasukkan path absolut untuk file hasil kompresi (contoh C:\\folder\\hasil.jpg): ");
       filePath = scanner.nextLine().trim();
       File file = new File(filePath);
       String parent = file.getParent();
+      String ext = getFileExtension(file);
+      boolean validExtension = false;
+      for (String valid : validExtensions) {
+        if (ext.equals(valid)) {
+          validExtension = true;
+          break;
+        }
+      }
+      if (!validExtension) {
+        System.out.println("Maaf! Ekstensi file tidak valid. Pastikan ekstensi file adalah .jpg, .jpeg, atau .png.");
+        continue;
+      }
       if (parent == null || parent.isEmpty()) {
         System.out.println("Maaf! Path tidak valid. Pastikan menyertakan direktori, bukan hanya nama file.");
-      } else {
-        break;
+        continue;
       }
+      break;
     }
     return filePath;
   }
