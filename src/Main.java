@@ -1,3 +1,4 @@
+
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -15,13 +16,13 @@ public class Main {
     Scanner scanner = new Scanner(System.in);
 
     System.out.println(" ___ __  __  ____    ____                                                   \r\n" + //
-            " |_ _|  \\/  |/ ___|  / ___|___  _ __ ___  _ __  _ __ ___  ___ ___  ___  _ __ \r\n" + //
-            "  | || |\\/| | |  _  | |   / _ \\| '_ ` _ \\| '_ \\| '__/ _ \\/ __/ __|/ _ \\| '__|\r\n" + //
-            "  | || |  | | |_| | | |__| (_) | | | | | | |_) | | |  __/\\__ \\__ \\ (_) | |   \r\n" + //
-            " |___|_|  |_|\\____|  \\____\\___/|_| |_| |_| .__/|_|  \\___||___/___/\\___/|_|   \r\n" + //
-            "                                         |_|     \n");
+        " |_ _|  \\/  |/ ___|  / ___|___  _ __ ___  _ __  _ __ ___  ___ ___  ___  _ __ \r\n" + //
+        "  | || |\\/| | |  _  | |   / _ \\| '_ ` _ \\| '_ \\| '__/ _ \\/ __/ __|/ _ \\| '__|\r\n" + //
+        "  | || |  | | |_| | | |__| (_) | | | | | | |_) | | |  __/\\__ \\__ \\ (_) | |   \r\n" + //
+        " |___|_|  |_|\\____|  \\____\\___/|_| |_| |_| .__/|_|  \\___||___/___/\\___/|_|   \r\n" + //
+        "                                         |_|     \n");
 
-    // Input PATH gambar (ditentukan untuk mempermudah debugging)
+    // Input PATH gambar
     String inputPath = getInputPath(scanner);
     BufferedImage image = loadImage(inputPath);
     if (image == null) {
@@ -40,32 +41,35 @@ public class Main {
     double threshold = getThreshold(scanner, metode);
     int minBlockSize = getMinBlockSize(scanner);
 
-    /* Input BONUS 1 - Target kompresi */
+    // Input BONUS 1 - Target kompresi
     double targetKompresi = getValidatedTarget(scanner);
     long originalSize = new File(inputPath).length();
     String format = getFileExtension(new File(inputPath));
-    if(targetKompresi != 0) {                                       // jika 0, maka dinonaktifkan
+    if (targetKompresi != 0) { // jika 0, maka dinonaktifkan
       double[] range = getCompressionRange(image, originalSize, metode, format);
       double minTarget = range[0], maxTarget = range[1];
-      System.out.printf("Rentang target kompresi untuk metode %s adalah: %.2f%% - %.2f%%\n", metode, minTarget*100, maxTarget*100); // lihat line 397
+      System.out.printf("Rentang target kompresi untuk metode %s adalah: %.2f%% - %.2f%%\n", metode, minTarget * 100,
+          maxTarget * 100); // lihat line 397
       threshold = autoAdjustThreshold(image, originalSize, metode, format, targetKompresi);
       minBlockSize = 1;
-      if(targetKompresi < minTarget || targetKompresi > maxTarget) {
-        System.out.println("Input target kompresi tidak berada dalam rentang yang bisa dilakukan oleh program ini, sistem akan tetap mencoba.");
+      if (targetKompresi < minTarget || targetKompresi > maxTarget) {
+        System.out.println(
+            "Input target kompresi tidak berada dalam rentang yang bisa dilakukan oleh program ini, sistem akan tetap mencoba.");
       } else {
-        System.out.println("Target kompresi diaktifkan! Berusaha menargetkan kompresi ke: " + (targetKompresi * 100) + "%");
+        System.out
+            .println("Target kompresi diaktifkan! Berusaha menargetkan kompresi ke: " + (targetKompresi * 100) + "%");
       }
     } else {
-        System.out.println("Mode target kompresi dinonaktifkan.");
+      System.out.println("Mode target kompresi dinonaktifkan.");
     }
 
     // PATH output
     String outputFilePath = getOutputFilePath(scanner);
     File outputFile = new File(outputFilePath);
     if (!prepareOutputFolder(outputFile.getParent())) {
-        System.out.println("Folder output tidak tersedia atau tidak dapat dibuat.");
-        scanner.close();
-        return;
+      System.out.println("Folder output tidak tersedia atau tidak dapat dibuat.");
+      scanner.close();
+      return;
     }
 
     // Proses kompresi
@@ -78,14 +82,18 @@ public class Main {
     // Menyimpan gambar hasil kompresi
     saveImage(compressedImage, outputFile);
 
-    /* Membuat GIF, bisa skip karena heap (jika file terlalu besar, Java tidak cukup, harus disetting terlebih dahulu) */
+    /*
+     * Membuat GIF, bisa skip karena heap (jika file terlalu besar, Java tidak
+     * cukup, harus disetting terlebih dahulu)
+     */
     boolean skipGIF = false;
-    if(image.getWidth() * image.getHeight() > 1920*1080){
-      System.out.println("\nMaaf! Ukuran gambar terlalu besar untuk membuat GIF proses kompresi karena memori Java tidak cukup. Kompresi akan tetap dijalankan tanpa pembuatan GIF.");
+    if (image.getWidth() * image.getHeight() > 1920 * 1080) {
+      System.out.println(
+          "\nMaaf! Ukuran gambar terlalu besar untuk membuat GIF proses kompresi karena memori Java tidak cukup. Kompresi akan tetap dijalankan tanpa pembuatan GIF.");
       skipGIF = true;
     }
 
-    if(!skipGIF){
+    if (!skipGIF) {
       int maxDepth = quadtree.getDepth(root);
       List<BufferedImage> evolutionFrames = new ArrayList<>();
       for (int level = 1; level <= maxDepth; level++) {
@@ -99,7 +107,7 @@ public class Main {
         ImageOutputStream evoOutput = new FileImageOutputStream(new File(outputGifPath));
         GifWriter evoGifWriter = new GifWriter(evoOutput, BufferedImage.TYPE_INT_RGB, 50, true);
         for (BufferedImage frame : evolutionFrames) {
-          evoGifWriter.writeToSequence(frame,50);
+          evoGifWriter.writeToSequence(frame, 50);
         }
         evoGifWriter.close();
       } catch (IOException e) {
@@ -107,7 +115,7 @@ public class Main {
       }
       System.out.println("GIF berhasil disimpan pada path yang dituju.");
     }
-    
+
     // Output stastistik
     printStatistics(inputPath, outputFile, quadtree, root, startTime, endTime);
 
@@ -118,7 +126,6 @@ public class Main {
   private static BufferedImage loadImage(String inputPath) {
     BufferedImage image = null;
     try {
-      //System.out.println("Path yang dibaca: " + inputPath);
       System.out.println("File berhasil dibaca.");
       image = ImageIO.read(new File(inputPath));
       if (image == null) {
@@ -135,7 +142,7 @@ public class Main {
   // Fungsi untuk memilih metode
   private static ErrorMeasurement.Metode chooseErrorMethod(Scanner scanner) {
     ErrorMeasurement.Metode metode = null;
-    while(metode == null) {
+    while (metode == null) {
       System.out.println("\nList Metode Perhitungan Error");
       System.out.println("1. Variance (0 - 20000)");
       System.out.println("2. MAD (0 - 255)");
@@ -143,7 +150,7 @@ public class Main {
       System.out.println("4. Entropy (0.5 - 8)");
       System.out.println("5. SSIM (0 - 1)");
       System.out.print("Pilih metode perhitungan error: ");
-      if(scanner.hasNextInt()){
+      if (scanner.hasNextInt()) {
         int metodePilihan = scanner.nextInt();
         scanner.nextLine();
         if (metodePilihan >= 1 && metodePilihan <= 5) {
@@ -182,7 +189,7 @@ public class Main {
         System.out.println("Threshold tidak sesuai range untuk metode MPD.");
       } else if (metode == ErrorMeasurement.Metode.ENTROPY && (threshold < 0.5 || threshold > 8)) {
         System.out.println("Threshold tidak sesuai range untuk metode Entropi.");
-      } else if(metode == ErrorMeasurement.Metode.SSIM && (threshold < 0 || threshold > 1)){
+      } else if (metode == ErrorMeasurement.Metode.SSIM && (threshold < 0 || threshold > 1)) {
         System.out.println("Threshold tidak sesuai range untuk metode SSIM.");
       } else {
         break;
@@ -258,7 +265,7 @@ public class Main {
     System.out.println("Banyak simpul pada pohon: " + nodeCount);
   }
 
-  /* Fungsi untuk mendapatkan input path dan validasi */
+  // Fungsi untuk mendapatkan input path dan validasi
   private static String getInputPath(Scanner scanner) {
     String inputPath;
     BufferedImage testImage = null;
@@ -285,10 +292,10 @@ public class Main {
     return inputPath;
   }
 
-  /* Fungsi untuk mendapatkan output path dan validasi */
+  // Fungsi untuk mendapatkan output path dan validasi
   private static String getOutputFilePath(Scanner scanner) {
     String filePath;
-    String[] validExtensions = {"jpg", "jpeg", "png"};
+    String[] validExtensions = { "jpg", "jpeg", "png" };
     while (true) {
       System.out.print("\nMasukkan path absolut untuk file hasil kompresi (contoh C:\\folder\\hasil.jpg): ");
       filePath = scanner.nextLine().trim();
@@ -315,7 +322,7 @@ public class Main {
     return filePath;
   }
 
-  /* Fungsi untuk mendapatkan output gif dan validasi */
+  // Fungsi untuk mendapatkan output gif dan validasi
   private static String getOutputGifPath(Scanner scanner) {
     String filePath;
     while (true) {
@@ -336,64 +343,70 @@ public class Main {
     return filePath;
   }
 
-  /* Fungsi untuk mendapatkan BONUS 1 - Target persentase dan validasi */
+  // Fungsi untuk mendapatkan BONUS 1 - Target persentase dan validasi
   private static double getValidatedTarget(Scanner scanner) {
     double target;
     while (true) {
       System.out.print("\nMasukkan target persentase kompresi (0.0-1.0 | 0 untuk menonaktifkan mode ini): ");
       String input = scanner.nextLine().replace(",", ".").trim();
       try {
-          target = Double.parseDouble(input);
+        target = Double.parseDouble(input);
       } catch (NumberFormatException e) {
-          System.out.println("Maaf! Input tidak valid. Silakan masukkan angka desimal.");
-          continue;
+        System.out.println("Maaf! Input tidak valid. Silakan masukkan angka desimal.");
+        continue;
       }
       if (target < 0.0 || target > 1.0) {
-          System.out.println("Maaf! Input harus berada di antara 0.0 dan 1.0. Silakan coba lagi.");
+        System.out.println("Maaf! Input harus berada di antara 0.0 dan 1.0. Silakan coba lagi.");
       } else {
-          break;
+        break;
       }
     }
     return target;
   }
 
-  /* Fungsi untuk BONUS 1, mencari threshold yang sesuai dengan keinginan user */
-  private static double autoAdjustThreshold(BufferedImage image, long originalSize, ErrorMeasurement.Metode metode, String format, double target){
+  // Fungsi untuk BONUS 1, mencari threshold yang sesuai dengan keinginan user
+  private static double autoAdjustThreshold(BufferedImage image, long originalSize, ErrorMeasurement.Metode metode,
+      String format, double target) {
     double batasBawah, batasAtas;
-    switch(metode){
+    switch (metode) {
       case VARIANCE:
-        batasBawah = 0; batasAtas = 20000;
+        batasBawah = 0;
+        batasAtas = 20000;
         break;
       case MAD:
-        batasBawah = 0; batasAtas = 100;
+        batasBawah = 0;
+        batasAtas = 100;
         break;
       case MPD:
-        batasBawah = 0; batasAtas = 255;
+        batasBawah = 0;
+        batasAtas = 255;
         break;
       case ENTROPY:
-        batasBawah = 0.5; batasAtas = 8;
+        batasBawah = 0.5;
+        batasAtas = 8;
         break;
       case SSIM:
-        batasBawah = 0; batasAtas = 1;
+        batasBawah = 0;
+        batasAtas = 1;
         break;
       default:
-        batasBawah = 0; batasAtas = 0;
+        batasBawah = 0;
+        batasAtas = 0;
     }
 
     double mid = batasBawah;
 
-    for(int i = 0;i < 10;i++){
+    for (int i = 0; i < 10; i++) {
       mid = (batasBawah + batasAtas) / 2;
       Quadtree qt = new Quadtree(mid, 1, metode);
-      Node root = qt.buildTree(image, new Rectangle(0,0,image.getWidth(),image.getHeight()));
+      Node root = qt.buildTree(image, new Rectangle(0, 0, image.getWidth(), image.getHeight()));
       BufferedImage compressed = qt.reconstructImage(root, image.getWidth(), image.getHeight());
 
       byte[] imageBytes = getImageBytes(compressed, format);
       long compressedSize = imageBytes.length;
       double currentCompression = (1 - ((double) compressedSize / (double) originalSize));
 
-      //System.out.println("Iterasi " + (i+1) + " - Threshold: " + mid + ", Kompresi Saat Ini: " + (currentCompression*100) + "%"); // untuk debug
-      if(currentCompression < target){
+      if (currentCompression < target) {
         batasBawah = mid;
       } else {
         batasAtas = mid;
@@ -402,45 +415,59 @@ public class Main {
     return mid;
   }
 
-  private static byte[] getImageBytes(BufferedImage image, String format){
-   ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
-   try {
-    ImageIO.write(image, format, byteArrayOS);
-   } catch (IOException e) {
-    e.printStackTrace();
-   }
-   return byteArrayOS.toByteArray();
+  private static byte[] getImageBytes(BufferedImage image, String format) {
+    ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
+    try {
+      ImageIO.write(image, format, byteArrayOS);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return byteArrayOS.toByteArray();
   }
 
-  /* Fungsi untuk BONUS 1, mencari limit bawah dan atas persentase, karena meskipun threshold 0 atau max, ada batasan sejauh mana dia bisa dikompresi */
-  private static double[] getCompressionRange(BufferedImage image, long originalSize, ErrorMeasurement.Metode metode, String format){
+  /*
+   * Fungsi untuk BONUS 1, mencari limit bawah dan atas persentase, karena
+   * meskipun threshold 0 atau max, ada batasan sejauh mana dia bisa dikompresi
+   */
+  private static double[] getCompressionRange(BufferedImage image, long originalSize, ErrorMeasurement.Metode metode,
+      String format) {
     double batasBawah, batasAtas;
-    switch(metode){
+    switch (metode) {
       case VARIANCE:
-        batasBawah = 0; batasAtas = 20000;
+        batasBawah = 0;
+        batasAtas = 20000;
         break;
       case MAD:
-        batasBawah = 0; batasAtas = 100;
+        batasBawah = 0;
+        batasAtas = 100;
         break;
       case MPD:
-        batasBawah = 0; batasAtas = 255;
+        batasBawah = 0;
+        batasAtas = 255;
         break;
       case ENTROPY:
-        batasBawah = 0.5; batasAtas = 8;
+        batasBawah = 0.5;
+        batasAtas = 8;
         break;
       case SSIM:
-        batasBawah = 0; batasAtas = 1;
+        batasBawah = 0;
+        batasAtas = 1;
         break;
       default:
-        batasBawah = 0; batasAtas = 0;
+        batasBawah = 0;
+        batasAtas = 0;
     }
     double minCompression = getCompressionForThreshold(image, originalSize, metode, format, batasBawah);
     double maxCompression = getCompressionForThreshold(image, originalSize, metode, format, batasAtas);
-    return new double[]{minCompression, maxCompression};
+    return new double[] { minCompression, maxCompression };
   }
 
-  /* Fungsi untuk BONUS 1, mencari limit bawah dan atas persentase, karena meskipun threshold 0 atau max, ada batasan sejauh mana dia bisa dikompresi */
-  private static double getCompressionForThreshold(BufferedImage image, long originalSize, ErrorMeasurement.Metode metode, String format, double threshold) {
+  /*
+   * Fungsi untuk BONUS 1, mencari limit bawah dan atas persentase, karena
+   * meskipun threshold 0 atau max, ada batasan sejauh mana dia bisa dikompresi
+   */
+  private static double getCompressionForThreshold(BufferedImage image, long originalSize,
+      ErrorMeasurement.Metode metode, String format, double threshold) {
     Quadtree qt = new Quadtree(threshold, 1, metode);
     Node root = qt.buildTree(image, new Rectangle(0, 0, image.getWidth(), image.getHeight()));
     BufferedImage compressed = qt.reconstructImage(root, image.getWidth(), image.getHeight());
