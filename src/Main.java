@@ -125,7 +125,6 @@ public class Main {
   private static BufferedImage loadImage(String inputPath) {
     BufferedImage image = null;
     try {
-      // System.out.println("Path yang dibaca: " + inputPath);
       System.out.println("File berhasil dibaca.");
       image = ImageIO.read(new File(inputPath));
       if (image == null) {
@@ -265,7 +264,7 @@ public class Main {
     System.out.println("Banyak simpul pada pohon: " + nodeCount);
   }
 
-  /* Fungsi untuk mendapatkan input path dan validasi */
+  // Fungsi untuk mendapatkan input path dan validasi
   private static String getInputPath(Scanner scanner) {
     String inputPath;
     BufferedImage testImage = null;
@@ -292,7 +291,7 @@ public class Main {
     return inputPath;
   }
 
-  /* Fungsi untuk mendapatkan output path dan validasi */
+  // Fungsi untuk mendapatkan output path dan validasi
   private static String getOutputFilePath(Scanner scanner) {
     String filePath;
     String[] validExtensions = { "jpg", "jpeg", "png" };
@@ -322,7 +321,7 @@ public class Main {
     return filePath;
   }
 
-  /* Fungsi untuk mendapatkan output gif dan validasi */
+  // Fungsi untuk mendapatkan output gif dan validasi
   private static String getOutputGifPath(Scanner scanner) {
     String filePath;
     while (true) {
@@ -343,7 +342,7 @@ public class Main {
     return filePath;
   }
 
-  /* Fungsi untuk mendapatkan BONUS 1 - Target persentase dan validasi */
+  // Fungsi untuk mendapatkan BONUS 1 - Target persentase dan validasi
   private static double getValidatedTarget(Scanner scanner) {
     double target;
     while (true) {
@@ -364,7 +363,7 @@ public class Main {
     return target;
   }
 
-  /* Fungsi untuk BONUS 1, mencari threshold yang sesuai dengan keinginan user */
+  // Fungsi untuk BONUS 1, mencari threshold yang sesuai dengan keinginan user
   private static double autoAdjustThreshold(BufferedImage image, long originalSize, ErrorMeasurement.Metode metode,
       String format, double target) {
     double batasBawah, batasAtas;
@@ -406,8 +405,6 @@ public class Main {
       long compressedSize = imageBytes.length;
       double currentCompression = (1 - ((double) compressedSize / (double) originalSize));
 
-      // System.out.println("Iterasi " + (i+1) + " - Threshold: " + mid + ", Kompresi
-      // Saat Ini: " + (currentCompression*100) + "%"); // untuk debug
       if (currentCompression < target) {
         batasBawah = mid;
       } else {
